@@ -1,7 +1,7 @@
 import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { errorResponse } from "@/utils/response"
+import { errorResponse } from "../utils/response"
 
 export interface CustomRequest extends Request {
   token: string | JwtPayload;
