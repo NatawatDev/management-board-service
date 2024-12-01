@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 interface IUser extends Document {
   email: string
@@ -19,9 +19,9 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
   updatedAt: { type: Date, default: null },
   tasks: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tasks'
+    ref: 'Task'
   }]
-}, { timestamps: true })
+})
 
 export const userModel = mongoose.model<IUser>("User", userSchema);
 
