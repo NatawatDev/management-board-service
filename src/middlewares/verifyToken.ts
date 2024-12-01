@@ -1,28 +1,27 @@
-import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { errorResponse } from "../utils/response"
-
-export interface CustomRequest extends Request {
-  token: string | JwtPayload;
- }
+import { verifyJwt } from '../utils/jwtUtils'
 
 async function verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const SECRET_KEY: Secret = process.env.JWT_SECRET || ''
-    const token = req.headers.authorization?.split(' ')[1]
+    const accessToken = req.headers.authorization?.split(' ')[1]
+
+    if (!accessToken) return errorResponse(res, StatusCodes.UNAUTHORIZED, 'Unauthorize please sign in.')
+
+    const { decoded, expired } = verifyJwt(accessToken as string)
+
+    if (expired) return errorResponse(res, StatusCodes.UNAUTHORIZED, 'Token is expired.')
     
-    if (!token) {
-      return errorResponse(res, StatusCodes.UNAUTHORIZED, 'Please authenticate');
+    if (decoded) {
+      res.locals.user = decoded
+      return next()
     }
-
-    const decoded = jwt.verify(token, SECRET_KEY);
-    (req as CustomRequest).token = decoded
-
+    
     next()
   } catch (err) {
     console.error(err);
-    return errorResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error.');
+    return errorResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error.')
   }
 }
 

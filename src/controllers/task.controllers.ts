@@ -12,9 +12,9 @@ import {
 
 export const createTask = async (req: Request, res: Response) => {
   try {
-    const { userId, title, description } = req.body
+    const { userId, title, description, dueDate } = req.body
 
-    const task = await createTaskService(userId, title, description)
+    const task = await createTaskService(userId, title, description, dueDate)
 
     return successResponse(res, StatusCodes.CREATED, 'Created Task successfully.', { taskData: task })
 
@@ -71,11 +71,12 @@ export const deleteTaskById = async (req: Request, res: Response) => {
 }
 
 export const editTaskById = async (req: Request, res: Response) => {
-  try {
+  try {    
+    const userId = res.locals.user.id
     const id = req.params.id as string    
     const { title, description, isImportant, status, dueDate } = req.body;
     
-    const modifyTask = await editTaskByIdService(id, { 
+    const modifyTask = await editTaskByIdService(userId, id, { 
       title, 
       description, 
       isImportant, 
