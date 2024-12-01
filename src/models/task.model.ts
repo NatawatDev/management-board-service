@@ -26,7 +26,7 @@ export const taskSchema: Schema<ITask> = new mongoose.Schema({
     required: true
   },
   isImportant: { type: Boolean, default: false },
-  dueDate: { type: Date, require: true},
+  dueDate: { type: Date, require: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: null }
 })

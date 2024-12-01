@@ -42,7 +42,7 @@ export const signInUserService = async (email: string, password: string) => {
 
     if (!isPasswordValid) throw new Error('Email or Password is invalid.')
     
-    const token = jwt.sign({ user: { id: existingUser._id ,firstname: existingUser.firstname, lastname: existingUser.lastname, tasks: existingUser.tasks } }, process.env.JWT_SECRET as string, {
+    const token = jwt.sign({ id: existingUser._id ,firstname: existingUser.firstname, lastname: existingUser.lastname, tasks: existingUser.tasks }, process.env.JWT_SECRET as string, {
       expiresIn: "1h"
     })
 

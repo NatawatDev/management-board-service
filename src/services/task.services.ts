@@ -2,7 +2,7 @@ import { taskModel } from '../models/task.model'
 import { userModel } from '../models/user.model'
 import { ITask } from '../models/task.model';
 
-export const createTaskService = async (userId: string, title: string, description: string) => {
+export const createTaskService = async (userId: string, title: string, description: string, dueDate: string) => {
   try {    
     const user = await userModel.findById(userId);
     if (!user) {
@@ -11,8 +11,9 @@ export const createTaskService = async (userId: string, title: string, descripti
     const newTask = new taskModel({
       title,
       description,
+      dueDate,
       user: userId,
-      updatedAt: Date.now
+      createdAt: new Date()
     })
 
     await newTask.save()
@@ -57,30 +58,49 @@ export const getTaskByUserIdService = async (userid: string) => {
 export const deleteTaskByIdService = async (id: string) => {
   try {
     const deleteTask = await taskModel.findByIdAndDelete(id)
+    if (!deleteTask) {
+      throw new Error("Task not found.")
+    }
+    const userId = deleteTask.user.toString()
 
-    return deleteTask || null
+    const user = await userModel.findById(userId)
+    if (user) {
+      user.tasks = user.tasks.filter(taskId => taskId.toString() !== id)
+      await user.save()
+    }
+
+    return deleteTask
   } catch (error) {
     throw error
   }
 }
 
-export const editTaskByIdService = async (id: string, updateData: Partial<ITask>) => {
+export const editTaskByIdService = async (userId: string, taskId: string, updateData: Partial<ITask>) => {
   try {
-    const updatedTask = await taskModel.findByIdAndUpdate(id,
+    const task = await taskModel.findById(taskId)
+    if (!task) {
+      throw new Error("Task not found.")
+    }
+
+    if (task.user.toString() !== userId) {
+      throw new Error("You are not authorized to modify this task.")
+    }
+
+    const updatedTask = await taskModel.findByIdAndUpdate(
+      taskId,
       { 
-        ...updateData, 
-        updatedAt: Date.now()
+        ...updateData,
+        updatedAt: new Date() 
       },
-      { new: true } 
-    )
+      { new: true }
+    );
 
     if (!updatedTask) {
-      throw new Error('Not found this task in the system.')
+      throw new Error("Task update failed.");
     }
 
     return updatedTask
-
   } catch (error) {
     throw error
   }
-}
+};
