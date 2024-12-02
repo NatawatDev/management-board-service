@@ -1,6 +1,6 @@
-import { Request, Response } from "express"
+import { Request, Response, NextFunction } from "express"
 import { StatusCodes } from 'http-status-codes'
-import { successResponse, handleError, errorResponse } from '../utils/response'
+import { successResponse,errorResponse } from '../utils/response'
 import { 
   createTaskService, 
   getTaskListService, 
@@ -10,7 +10,7 @@ import {
   editTaskByIdService 
 } from '../services/task.services'
 
-export const createTask = async (req: Request, res: Response) => {
+export const createTask = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId, title, description, dueDate } = req.body
 
@@ -19,58 +19,57 @@ export const createTask = async (req: Request, res: Response) => {
     return successResponse(res, StatusCodes.CREATED, 'Created Task successfully.', { taskData: task })
 
   } catch (error) {
-    handleError(error, res)
+    next(error)
   }
 }
 
-export const getTasks = async (req: Request, res: Response) => {
+export const getTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const taskList = await getTaskListService()
-
+    const taskList = await getTaskListService()    
     return successResponse(res, StatusCodes.OK, '', { taskList: taskList })
   } catch (error) {
-    handleError(error, res)
+    next(error)
   }
 }
 
-export const getTaskById = async (req: Request, res: Response) => {
+export const getTaskById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string    
     const task = await getTaskByIdService(id)
 
-    if (!task) return errorResponse(res, StatusCodes.BAD_REQUEST, 'Task not found.')
+    // if (!task) return errorResponse(res, StatusCodes.BAD_REQUEST, 'Task not found.')
     
     return successResponse(res, StatusCodes.OK, '', { task: task })    
   } catch (error) {
-    handleError(error, res)
+    next(error)
   }
 }
 
-export const getTaskByUserId = async (req: Request, res: Response) => {
+export const getTaskByUserId = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.params.userId as string    
     const userTask = await getTaskByUserIdService(userId)
     
     return successResponse(res, StatusCodes.OK, '', { userTask: userTask })    
   } catch (error) {
-    handleError(error, res)
+    next(error)
   }
 }
 
-export const deleteTaskById = async (req: Request, res: Response) => {
+export const deleteTaskById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string    
     const deleteTask = await deleteTaskByIdService(id)
 
-    if (!deleteTask) return errorResponse(res, StatusCodes.BAD_REQUEST, 'Task not found.')
+    // if (!deleteTask) return errorResponse(res, StatusCodes.BAD_REQUEST, 'Task not found.')
     
     return successResponse(res, StatusCodes.OK, 'Deleted Task successfully.',)    
   } catch (error) {
-    handleError(error, res)
+    next(error)
   }
 }
 
-export const editTaskById = async (req: Request, res: Response) => {
+export const editTaskById = async (req: Request, res: Response, next: NextFunction) => {
   try {    
     const userId = res.locals.user.id
     const id = req.params.id as string    
@@ -86,6 +85,6 @@ export const editTaskById = async (req: Request, res: Response) => {
 
     return successResponse(res, StatusCodes.OK, 'Modify Task successfully.', { task: modifyTask })    
   } catch (error) {
-    handleError(error, res)
+    next(error)
   }
 }

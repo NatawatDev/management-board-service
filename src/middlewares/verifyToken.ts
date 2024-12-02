@@ -1,17 +1,17 @@
 import { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { errorResponse } from "../utils/response"
+import { HttpException } from '../exception/exception'
 import { verifyJwt } from '../utils/jwtUtils'
 
 async function verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const accessToken = req.headers.authorization?.split(' ')[1]
 
-    if (!accessToken) return errorResponse(res, StatusCodes.UNAUTHORIZED, 'Unauthorize please sign in.')
+    if (!accessToken) return next(new HttpException(StatusCodes.UNAUTHORIZED, 'Unauthorize please sign in.'))
 
     const { decoded, expired } = verifyJwt(accessToken as string)
 
-    if (expired) return errorResponse(res, StatusCodes.UNAUTHORIZED, 'Token is expired.')
+    if (expired) return next(new HttpException(StatusCodes.UNAUTHORIZED, 'Token is expired.'))
     
     if (decoded) {
       res.locals.user = decoded
@@ -20,8 +20,7 @@ async function verifyToken(req: Request, res: Response, next: NextFunction): Pro
     
     next()
   } catch (err) {
-    console.error(err);
-    return errorResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error.')
+    next(err)
   }
 }
 

@@ -1,106 +1,81 @@
 import { taskModel } from '../models/task.model'
 import { userModel } from '../models/user.model'
-import { ITask } from '../models/task.model';
+import { HttpException } from '../exception/exception'
+import { StatusCodes } from 'http-status-codes'
+import { ITask } from '../models/task.model'
 
 export const createTaskService = async (userId: string, title: string, description: string, dueDate: string) => {
-  try {    
-    const user = await userModel.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    const newTask = new taskModel({
-      title,
-      description,
-      dueDate,
-      user: userId,
-      createdAt: new Date()
-    })
+  const user = await userModel.findById(userId)
 
-    await newTask.save()
+  if (!user) throw new HttpException(StatusCodes.NOT_FOUND, 'User not found')
 
-    user.tasks.push(newTask.id);
-    await user.save();
+  const newTask = new taskModel({
+    title,
+    description,
+    dueDate,
+    user: userId,
+    createdAt: new Date()
+  })
 
-    return newTask    
-
-    
-  } catch (error) {
-    throw error
-  }
+  await newTask.save()
+  
+  user.tasks.push(newTask.id)
+  
+  await user.save()
+  
+  return newTask    
 }
 
 export const getTaskListService = async () => {
-  try {
-    const taskList = await taskModel.find()
-    return taskList
-  } catch (error) {
-    throw error
-  }
+  const taskList = await taskModel.find()
+    
+  if (taskList.length === 0) throw new HttpException(StatusCodes.NOT_FOUND, 'Task list not found');
+  
+  return taskList
 }
 
 export const getTaskByIdService = async (id: string) => {
-  try {
-    const task = await taskModel.findById(id)
-    return task || null
-  } catch (error) {
-    throw error
-  }
+  const task = await taskModel.findById(id)
+  
+  if (!task) throw new HttpException(StatusCodes.NOT_FOUND, 'Task not found')
+  
+  return task
 }
-export const getTaskByUserIdService = async (userid: string) => {
-  try {
-    const userTask = await userModel.findById(userid).populate("tasks")
-    return userTask?.tasks
-  } catch (error) {
-    throw error
-  }
+
+export const getTaskByUserIdService = async (userId: string) => {
+  const userTask = await userModel.findById(userId).populate('tasks')
+  
+  if (!userTask) throw new HttpException(StatusCodes.NOT_FOUND, 'User not found')  
+
+  return userTask.tasks
 }
 
 export const deleteTaskByIdService = async (id: string) => {
-  try {
-    const deleteTask = await taskModel.findByIdAndDelete(id)
-    if (!deleteTask) {
-      throw new Error("Task not found.")
-    }
-    const userId = deleteTask.user.toString()
+  const deleteTask = await taskModel.findByIdAndDelete(id)
 
-    const user = await userModel.findById(userId)
-    if (user) {
-      user.tasks = user.tasks.filter(taskId => taskId.toString() !== id)
-      await user.save()
-    }
+  if (!deleteTask) throw new HttpException(StatusCodes.NOT_FOUND, 'Task not found')
+  
+  const userId = deleteTask.user.toString()
+  const user = await userModel.findById(userId)
 
-    return deleteTask
-  } catch (error) {
-    throw error
+  if (user) {
+    user.tasks = user.tasks.filter(taskId => taskId.toString() !== id)
+    await user.save()
   }
+
+  return deleteTask
 }
 
 export const editTaskByIdService = async (userId: string, taskId: string, updateData: Partial<ITask>) => {
-  try {
-    const task = await taskModel.findById(taskId)
-    if (!task) {
-      throw new Error("Task not found.")
-    }
+  const task = await taskModel.findById(taskId)
 
-    if (task.user.toString() !== userId) {
-      throw new Error("You are not authorized to modify this task.")
-    }
+  if (!task) throw new HttpException(StatusCodes.NOT_FOUND, 'Task not found')
+  
+  if (task.user.toString() !== userId) throw new HttpException(StatusCodes.FORBIDDEN, 'You are not authorized to modify this task')
+  
+  const updatedTask = await taskModel.findByIdAndUpdate(taskId, { ...updateData, updatedAt: new Date()},{ new: true })
 
-    const updatedTask = await taskModel.findByIdAndUpdate(
-      taskId,
-      { 
-        ...updateData,
-        updatedAt: new Date() 
-      },
-      { new: true }
-    );
-
-    if (!updatedTask) {
-      throw new Error("Task update failed.");
-    }
-
-    return updatedTask
-  } catch (error) {
-    throw error
-  }
+  if (!updatedTask) throw new HttpException(StatusCodes.INTERNAL_SERVER_ERROR, 'Task update failed')
+  
+  return updatedTask
 };

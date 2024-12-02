@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express'
+import { HttpException } from '../exception/exception';
 import { z, ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
-import { errorResponse } from "../utils/response"
+
 
 export const validateData = (schema: z.ZodObject<any, any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -10,9 +11,7 @@ export const validateData = (schema: z.ZodObject<any, any>) => {
       next()
     } catch (error) {
       if (error instanceof ZodError) {
-        return errorResponse(res, StatusCodes.BAD_REQUEST, 'Please fill out the information completely.');
-      } else {
-        return errorResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal Server Error.');
+        throw new HttpException(StatusCodes.BAD_REQUEST, 'Please fill out the information completely.')
       }
     }
   };
