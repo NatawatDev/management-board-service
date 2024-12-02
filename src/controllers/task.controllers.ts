@@ -26,7 +26,9 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
 export const getTasks = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const taskList = await getTaskListService()    
+
     return successResponse(res, StatusCodes.OK, '', { taskList: taskList })
+  
   } catch (error) {
     next(error)
   }
@@ -36,10 +38,9 @@ export const getTaskById = async (req: Request, res: Response, next: NextFunctio
   try {
     const id = req.params.id as string    
     const task = await getTaskByIdService(id)
-
-    // if (!task) return errorResponse(res, StatusCodes.BAD_REQUEST, 'Task not found.')
-    
+        
     return successResponse(res, StatusCodes.OK, '', { task: task })    
+  
   } catch (error) {
     next(error)
   }
@@ -51,6 +52,7 @@ export const getTaskByUserId = async (req: Request, res: Response, next: NextFun
     const userTask = await getTaskByUserIdService(userId)
     
     return successResponse(res, StatusCodes.OK, '', { userTask: userTask })    
+  
   } catch (error) {
     next(error)
   }
@@ -60,10 +62,8 @@ export const deleteTaskById = async (req: Request, res: Response, next: NextFunc
   try {
     const id = req.params.id as string    
     const deleteTask = await deleteTaskByIdService(id)
-
-    // if (!deleteTask) return errorResponse(res, StatusCodes.BAD_REQUEST, 'Task not found.')
-    
-    return successResponse(res, StatusCodes.OK, 'Deleted Task successfully.',)    
+ 
+    return successResponse(res, StatusCodes.OK, 'Deleted Task successfully.', { taskId: deleteTask.id })    
   } catch (error) {
     next(error)
   }
@@ -73,7 +73,7 @@ export const editTaskById = async (req: Request, res: Response, next: NextFuncti
   try {    
     const userId = res.locals.user.id
     const id = req.params.id as string    
-    const { title, description, isImportant, status, dueDate } = req.body;
+    const { title, description, isImportant, status, dueDate } = req.body
     
     const modifyTask = await editTaskByIdService(userId, id, { 
       title, 

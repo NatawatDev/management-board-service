@@ -30,7 +30,7 @@ export const signInUserService = async (email: string, password: string) => {
   const storedPassword = existingUser.password
   const isPasswordValid = await bcrypt.compare(password, storedPassword)
 
-  if (!isPasswordValid) throw new HttpException(StatusCodes.BAD_REQUEST, 'Not found this email in the system.')
+  if (!isPasswordValid) throw new HttpException(StatusCodes.BAD_REQUEST, 'Email or Password is invalid.')
   
   const token = jwt.sign({ id: existingUser._id ,firstname: existingUser.firstname, lastname: existingUser.lastname, tasks: existingUser.tasks }, process.env.JWT_SECRET as string, {
     expiresIn: "1h"
